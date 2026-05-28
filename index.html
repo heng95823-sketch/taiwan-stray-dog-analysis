@@ -3,228 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>臺灣遊蕩犬分析報告 - 蘇姮方</title>
-    <!-- 引入專業視覺化資源 -->
+    <title>臺灣遊蕩犬分析 - 蘇姮方</title>
+    <!-- 引入地圖與圖表套件 -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-ultra-light: #fdfefe;
-            --sky-gradient-start: #f0f9ff; /* 極淺清爽藍 */
-            --sky-gradient-end: #ffffff;
-            --accent-sky: #0ea5e9;
-            --text-dark: #1e293b;
-            --text-soft: #64748b;
-            --glass-white: rgba(255, 255, 255, 0.7);
-            --border-light: #f1f5f9;
+            --primary-blue: #00AEEF;
+            --dark-blue: #0056b3;
+            --light-blue: #F0F8FF;
+            --accent-blue: #E3F2FD;
+            --text-dark: #2c3e50;
         }
-
-        * { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
         body { 
-            font-family: 'Inter', 'Noto Sans TC', sans-serif; 
+            font-family: "Microsoft JhengHei", sans-serif; 
             margin: 0; padding: 0; 
-            background-color: var(--bg-ultra-light); 
+            background-color: var(--light-blue);
             color: var(--text-dark);
-            letter-spacing: 0.02em;
         }
-
-        /* 頂級清新導覽列 */
-        nav {
-            padding: 24px 8%;
-            display: flex; justify-content: space-between; align-items: center;
-            background: var(--glass-white);
-            backdrop-filter: saturate(180%) blur(15px);
-            position: sticky; top: 0; z-index: 1000;
-            border-bottom: 1px solid var(--border-light);
-        }
-        .nav-brand { font-weight: 700; color: var(--accent-sky); font-size: 1rem; letter-spacing: 1px; }
-        .nav-author { font-weight: 400; color: var(--text-soft); font-size: 0.85rem; }
-
-        /* Hero 區塊 - 清新漸層設計 */
+        /* 極簡化藍色標題區 */
         .hero {
-            padding: 160px 20px 120px;
-            text-align: center;
-            background: linear-gradient(180deg, var(--sky-gradient-start) 0%, var(--sky-gradient-end) 100%);
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--dark-blue) 100%);
+            color: white; padding: 25px 20px; text-align: center;
+            border-bottom: 4px solid rgba(255,255,255,0.3);
         }
-        .hero h1 { 
-            font-size: 3.5rem; margin: 0; font-weight: 700; letter-spacing: -2px;
-            color: var(--text-dark);
+        .hero h1 { font-size: 1.8em; margin: 0; letter-spacing: 1px; }
+        .author-tag { 
+            background: rgba(0,0,0,0.12); display: inline-block; 
+            padding: 2px 12px; border-radius: 12px; margin-top: 5px; font-size: 0.85em;
         }
-        .hero .subtitle { 
-            margin-top: 24px; font-size: 1.25rem; color: var(--text-soft); 
-            font-weight: 300; max-width: 700px; margin-inline: auto;
+        /* 來源照片視覺區 */
+        .dog-banner-container { text-align: center; margin: 20px 0; }
+        .dog-banner {
+            width: 100%; max-width: 500px; height: auto;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); border: 5px solid white;
         }
-
-        .container { max-width: 1000px; margin: -60px auto 100px; padding: 0 24px; }
-
-        /* 極簡章節卡片 */
-        section {
-            background: #ffffff; border-radius: 30px; padding: 60px;
-            margin-bottom: 40px; border: 1px solid var(--border-light);
-            box-shadow: 0 4px 30px rgba(0,0,0,0.02);
+        .container { max-width: 950px; margin: 0 auto 50px; padding: 0 20px; }
+        .card { 
+            background: white; padding: 25px; border-radius: 12px; 
+            box-shadow: 0 5px 15px rgba(0,174,239,0.05); margin-bottom: 20px;
+            border-left: 6px solid var(--primary-blue);
         }
-        h2 { font-size: 1.75rem; margin-top: 0; font-weight: 700; color: var(--text-dark); margin-bottom: 30px; }
-        .desc { font-size: 1.05rem; line-height: 1.9; color: #475569; text-align: justify; font-weight: 300; }
-
-        /* 地圖與視覺組件 */
-        #map { height: 550px; width: 100%; border-radius: 24px; margin: 30px 0; border: 1px solid var(--border-light); }
-        .insight-box {
-            background: #fafcfe; border-radius: 20px; padding: 30px;
-            font-size: 1rem; line-height: 1.8; border: 1px solid #eef2f6;
-            color: #64748b;
-        }
-        .insight-box strong { color: var(--accent-sky); font-weight: 600; }
-
-        /* 頁尾 - 半透明海浪與資料來源 */
-        footer {
-            position: relative; padding: 120px 20px 80px;
-            background: #ffffff; overflow: hidden; text-align: center;
-        }
-        .wave-container {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100px;
-            overflow: hidden; line-height: 0; transform: rotate(180deg);
-        }
-        .wave-container svg { position: relative; display: block; width: calc(150% + 1.3px); height: 80px; }
-        .wave-container .shape-fill { fill: var(--sky-gradient-start); fill-opacity: 0.5; }
-
-        .footer-content { position: relative; z-index: 1; }
-        .footer-content p { margin: 8px 0; color: var(--text-soft); font-size: 0.9rem; }
-        .footer-content a { color: var(--accent-sky); text-decoration: none; font-weight: 500; }
-
-        @media (max-width: 768px) {
-            .hero h1 { font-size: 2.5rem; }
-            section { padding: 35px; }
-        }
+        .preface { font-size: 1em; line-height: 1.8; text-align: justify; }
+        #map { height: 400px; width: 100%; border-radius: 10px; margin: 15px 0; border: 1px solid #ddd; }
+        .analysis-text { background: var(--accent-blue); padding: 15px; border-radius: 8px; font-size: 0.9em; line-height: 1.6; }
+        h2 { color: var(--dark-blue); font-size: 1.25em; margin-top: 0; }
     </style>
 </head>
 <body>
 
-<nav>
-    <div class="nav-brand">TAIWAN ANIMAL NETWORK</div>
-    <div class="nav-author">蘇姮方 — 年度數據分析</div>
-</nav>
-
-<header class="hero">
+<div class="hero">
     <h1>臺灣遊蕩犬分析</h1>
-    <div class="subtitle">113 年度各縣市分佈調查：尋找人犬共處的平衡點</div>
-</header>
-
-<div class="container">
-    <section>
-        <h2>研究核心與願景</h2>
-        <p class="desc">
-            本分析計畫旨在將「尊重生命、保護動物」的社會核心價值，轉化為具有視覺美感且理性的數據報告。遊蕩犬問題不僅是城市管理的一環，更是生命尊嚴與社會資源分配的體現。透過分析 113 年全台 141,584 隻遊蕩犬的空間軌跡，我們期許能為各級政府提供精準的決策依據，優化絕育資源投放並減緩人犬衝突風險。這份報告不僅是數字，更是邁向和諧共生社會的重要基礎。
-        </p>
-    </section>
-
-    <section>
-        <h2>地理分佈分析</h2>
-        <div id="map"></div>
-        <div class="insight-box">
-            <strong>【分佈概況】</strong><br>
-            根據來源資料中的數據排名，全台遊蕩犬總數估計為 141,584 隻。中南部地區為目前的主要分佈熱區，其中臺南市 (19,990 隻)與嘉義縣 (16,944 隻)的估計數佔全國約 26%。地圖上的圓圈大小直觀反映了各地的管理壓力級距，淺藍色標記標示出需要資源關注的關鍵區域。
-        </div>
-    </section>
-
-    <section>
-        <h2>人犬密度指標 (隻 / 百人)</h2>
-        <div style="height: 500px;"><canvas id="densityChart"></canvas></div>
-        <div class="insight-box" style="margin-top:40px;">
-            <strong>【密度觀察】</strong><br>
-            考量人口基數後的密度分析顯示，臺東縣 (4.04)與嘉義縣 (3.50)的每百人遊蕩犬比例高居全台前兩名。雖然總數未必最高，但高人犬比例反映出當地在有限的人口管理能量下，面臨更具挑戰性的動物福利與安全維護壓力，與都會區（如臺北市 0.08）形成強烈對比。
-        </div>
-    </section>
+    <div class="author-tag">作者：蘇姮方</div>
 </div>
 
-<footer>
-    <div class="wave-container">
-        <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
-            <path d="M321.39,56.44c58-10.79,114.16-30.13,172-41.86,82.39-16.72,168.19-17.73,250.45-.39C823.78,31,906.67,72,985.66,92.83c70.05,18.48,146.53,26.09,214.34,3V0H0V46.29C80.38,70.19,171,67.73,253,53.7Z" class="shape-fill"></path>
-        </svg>
+<div class="container">
+    <div class="dog-banner-container">
+        <!-- 使用來源照片 -->
+        <img src="20220428004531.jpg" alt="來源照片：互相依偎的流浪幼犬" class="dog-banner">
     </div>
-    <div class="footer-content">
-        <p>© 2024 臺灣遊蕩犬分析報告 | 作者：蘇姮方</p>
-        <p>資料來源：農業部，政府資料開放平台，<br>
-        <a href="https://data.gov.tw/dataset/41771" target="_blank">https://data.gov.tw/dataset/41771</a></p>
+
+    <div class="card">
+        <div class="preface">
+            <strong>前言：</strong>
+            這張照片捕捉了流浪幼犬在街頭互相取暖的真實瞬間，提醒我們「尊重生命、保護動物」不僅是口號，更是需要數據支持的具體行動。本網頁分析 113 年全台 141,584 隻遊蕩犬的分布情況，期望能提升大眾對動物福利的關注。透過掌握精確的空間數據，我們能協助相關單位更有效地規劃絕育與收容政策。本資料結合了農業部 113 年調查結果與內政部人口統計數據。
+        </div>
     </div>
-</footer>
+
+    <div class="card">
+        <h2>📍 113年全台縣市遊蕩犬分布地圖</h2>
+        <div id="map"></div>
+        <div class="analysis-text">
+            <strong>空間分布分析：</strong>
+            根據調查，中南部地區為遊蕩犬的主要熱點。<strong>臺南市 (19,990 隻)</strong> 與 <strong>嘉義縣 (16,944 隻)</strong> 數量最高。地圖中的圓圈顏色反映了數量級距，深藍色代表該區域面臨較大的遊蕩犬管理挑戰。
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>📊 各縣市每百人遊蕩犬數（由高至低排序）</h2>
+        <canvas id="barChart"></canvas>
+        <div class="analysis-text" style="margin-top:15px;">
+            <strong>關鍵數字排名：</strong>
+            若考慮人口密度，<strong>臺東縣 (4.04)</strong> 與 <strong>嘉義縣 (3.50)</strong> 的每百人犬數顯著偏高，遠超全國平均值 0.605。相對而言，都會化程度較高的臺北市僅為 0.08，顯示城鄉區域在問題嚴重程度上的極大差異。
+        </div>
+    </div>
+</div>
 
 <script>
-    // 依據 CSV 資料匯入 113 年度精確數據
-    const dogStats113 = [
-        { name: "臺南市", count: 19990, per100: 1.07, lat: 23.00, lng: 120.22 },
-        { name: "嘉義縣", count: 16944, per100: 3.50, lat: 23.45, lng: 120.25 },
-        { name: "高雄市", count: 10200, per100: 0.37, lat: 22.62, lng: 120.30 },
-        { name: "屏東縣", count: 10024, per100: 1.26, lat: 22.66, lng: 120.48 },
+    // 完整 22 縣市數據
+    const fullData = [
         { name: "新北市", count: 9982, per100: 0.25, lat: 25.01, lng: 121.46 },
-        { name: "南投縣", count: 9644, per100: 2.02, lat: 23.90, lng: 120.69 },
-        { name: "彰化縣", count: 9313, per100: 0.75, lat: 24.07, lng: 120.54 },
-        { name: "臺東縣", count: 8551, per100: 4.04, lat: 22.75, lng: 121.15 },
-        { name: "臺中市", count: 8542, per100: 0.30, lat: 24.14, lng: 120.67 },
-        { name: "桃園市", count: 7893, per100: 0.34, lat: 24.99, lng: 121.30 },
-        { name: "苗栗縣", count: 7403, per100: 1.38, lat: 24.56, lng: 120.82 },
-        { name: "花蓮縣", count: 6983, per100: 2.20, lat: 23.97, lng: 121.60 },
-        { name: "雲林縣", count: 4934, per100: 0.75, lat: 23.70, lng: 120.43 },
-        { name: "基隆市", count: 3112, per100: 0.86, lat: 25.12, lng: 121.74 },
-        { name: "新竹縣", count: 2396, per100: 0.41, lat: 24.83, lng: 121.01 },
         { name: "臺北市", count: 1908, per100: 0.08, lat: 25.03, lng: 121.56 },
+        { name: "臺中市", count: 8542, per100: 0.30, lat: 24.14, lng: 120.67 },
+        { name: "臺南市", count: 19990, per100: 1.07, lat: 22.99, lng: 120.22 },
+        { name: "高雄市", count: 10200, per100: 0.37, lat: 22.62, lng: 120.30 },
+        { name: "桃園市", count: 7893, per100: 0.34, lat: 24.99, lng: 121.30 },
         { name: "宜蘭縣", count: 1630, per100: 0.36, lat: 24.75, lng: 121.75 },
-        { name: "嘉義市", count: 906, per100: 0.34, lat: 23.48, lng: 120.44 },
+        { name: "新竹縣", count: 2396, per100: 0.41, lat: 24.83, lng: 121.01 },
+        { name: "苗栗縣", count: 7403, per100: 1.38, lat: 24.56, lng: 120.82 },
+        { name: "彰化縣", count: 9313, per100: 0.75, lat: 24.07, lng: 120.54 },
+        { name: "南投縣", count: 9644, per100: 2.02, lat: 23.90, lng: 120.69 },
+        { name: "雲林縣", count: 4934, per100: 0.75, lat: 23.70, lng: 120.43 },
+        { name: "嘉義縣", count: 16944, per100: 3.50, lat: 23.45, lng: 120.25 },
+        { name: "屏東縣", count: 10024, per100: 1.26, lat: 22.66, lng: 120.48 },
+        { name: "臺東縣", count: 8551, per100: 4.04, lat: 22.75, lng: 121.15 },
+        { name: "花蓮縣", count: 6983, per100: 2.20, lat: 23.97, lng: 121.60 },
         { name: "澎湖縣", count: 520, per100: 0.48, lat: 23.57, lng: 119.57 },
+        { name: "基隆市", count: 3112, per100: 0.86, lat: 25.12, lng: 121.74 },
         { name: "新竹市", count: 516, per100: 0.11, lat: 24.81, lng: 120.96 },
+        { name: "嘉義市", count: 906, per100: 0.34, lat: 23.48, lng: 120.44 },
         { name: "金門縣", count: 167, per100: 0.12, lat: 24.44, lng: 118.37 },
         { name: "連江縣", count: 26, per100: 0.19, lat: 26.15, lng: 119.92 }
     ];
 
-    // 初始化地圖 (亮色極簡風格)
-    const map = L.map('map', { scrollWheelZoom: false }).setView([23.7, 120.9], 7);
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png').addTo(map);
+    const map = L.map('map').setView([23.6, 120.8], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
 
-    function getFreshColor(d) {
-        return d > 15000 ? '#0284c7' : d > 10000 ? '#0ea5e9' : d > 5000 ? '#7dd3fc' : '#bae6fd';
+    function getMapColor(d) {
+        return d > 15000 ? '#0056b3' : d > 9000 ? '#007bff' : d > 5000 ? '#00AEEF' : '#b3e5fc';
     }
 
-    dogStats113.forEach(city => {
-        const marker = L.circle([city.lat, city.lng], {
-            color: getFreshColor(city.count),
-            fillColor: getFreshColor(city.count),
-            fillOpacity: 0.4,
-            radius: Math.sqrt(city.count) * 240,
-            weight: 1
-        }).addTo(map);
-        
-        marker.bindTooltip(`<b>${city.name}</b><br>估計數：${city.count.toLocaleString()} 隻`, { sticky: true });
+    fullData.forEach(city => {
+        L.circle([city.lat, city.lng], {
+            color: getMapColor(city.count),
+            fillColor: getMapColor(city.count),
+            fillOpacity: 0.6,
+            radius: Math.sqrt(city.count) * 200
+        }).addTo(map).bindPopup(`<b>${city.name}</b><br>估計數：${city.count.toLocaleString()} 隻<br>密度：${city.per100}`);
     });
 
-    // 密度長條圖
-    const sortedData = [...dogStats113].sort((a, b) => b.per100 - a.per100);
-    const ctx = document.getElementById('densityChart').getContext('2d');
+    const sortedByDensity = [...fullData].sort((a, b) => b.per100 - a.per100);
+    const ctx = document.getElementById('barChart').getContext('2d');
     new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: sortedData.map(d => d.name),
+            labels: sortedByDensity.map(d => d.name),
             datasets: [{
                 label: '每百人遊蕩犬數',
-                data: sortedData.map(d => d.per100),
-                backgroundColor: sortedData.map(d => getFreshColor(d.count)),
-                borderRadius: 20,
-                barThickness: 12
+                data: sortedByDensity.map(d => d.per100),
+                backgroundColor: sortedByDensity.map(d => getMapColor(d.count)),
+                borderRadius: 4
             }]
         },
         options: {
             indexAxis: 'y',
             responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: { backgroundColor: 'rgba(255,255,255,0.9)', titleColor: '#000', bodyColor: '#444', borderColor: '#eee', borderWidth: 1 }
-            },
-            scales: {
-                x: { grid: { display: false }, border: { display: false } },
-                y: { grid: { display: false }, border: { display: false } }
-            }
+            plugins: { legend: { display: false } },
+            scales: { x: { grid: { display: false } } }
         }
     });
 </script>
